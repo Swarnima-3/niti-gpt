@@ -38,7 +38,11 @@ def create_faiss_from_documents(chunks, collection_name):
 def load_vector_db(collection_name):
     persist_dir = f"faiss_dbs/{collection_name}"
     embedding = get_embedding_model()
-    db = FAISS.load_local(persist_dir, embeddings=embedding)  # ✅ Fix here
+    db = FAISS.load_local(
+        persist_dir,
+        embeddings=embedding,
+        allow_dangerous_deserialization=True  # ✅ Add this
+    )
     st.session_state.vector_db = db
 
 # --- Extract Metadata ---
