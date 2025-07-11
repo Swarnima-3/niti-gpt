@@ -37,7 +37,8 @@ def create_faiss_from_documents(chunks, collection_name):
 # --- FAISS: Load Existing DB ---
 def load_vector_db(collection_name):
     persist_dir = f"faiss_dbs/{collection_name}"
-    db = FAISS.load_local(persist_dir, embedding_function=get_embedding_model())
+    embedding = get_embedding_model()
+    db = FAISS.load_local(persist_dir, embedding)
     st.session_state.vector_db = db
 
 # --- Extract Metadata ---
