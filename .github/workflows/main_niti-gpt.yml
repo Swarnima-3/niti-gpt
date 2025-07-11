@@ -76,4 +76,5 @@ jobs:
         with:
           app-name: 'niti-gpt'
           slot-name: 'Production'
+          package: release.zip 
           
