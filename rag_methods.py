@@ -43,14 +43,18 @@ def create_chroma_from_documents(chunks, collection_name):
 def load_vector_db(collection_name):
     persist_dir = f"chroma_dbs/{collection_name}"
 
-    settings = Settings(chroma_db_impl="duckdb+parquet", persist_directory=persist_dir)
+    settings = Settings(
+        chroma_db_impl="duckdb+parquet",
+        persist_directory=persist_dir
+    )
 
     db = Chroma(
-    persist_directory=persist_dir,
-    collection_name=collection_name,
-    embedding_function=get_embedding_model(),
-    client_settings=settings
+        persist_directory=persist_dir,
+        collection_name=collection_name,
+        embedding_function=get_embedding_model(),
+        client_settings=settings
     )
+
     st.session_state.vector_db = db
 
 def extract_policy_metadata(text):
