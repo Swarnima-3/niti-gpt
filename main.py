@@ -7,7 +7,7 @@ from langchain.schema import HumanMessage, AIMessage
 from dotenv import load_dotenv
 load_dotenv()
 
-from rag_methods import (
+from rag_method1 import (
     load_doc_to_db,
     load_url_to_db,
     stream_llm_response,
@@ -53,7 +53,7 @@ if "vector_db" not in st.session_state:
 with st.sidebar:
     st.markdown("### 📁 Policy Collection")
     # Load existing collections
-    available_collections = os.listdir("chroma_dbs") if os.path.exists("chroma_dbs") else []
+    available_collections = os.listdir("faiss_dbs") if os.path.exists("faiss_dbs") else []
     new_policy_mode = st.checkbox("➕ Add New Policy Collection")
 
     if new_policy_mode:
@@ -81,7 +81,7 @@ with st.sidebar:
     st.button("🧹 Clear Chat", on_click=lambda: st.session_state.messages.clear())
 
 # Main chat
-from rag_methods import load_txt_files_from_folder
+from rag_method1 import load_txt_files_from_folder
 
 # Example usage
 collection_name = "DeepTech_Startup_Policies"
