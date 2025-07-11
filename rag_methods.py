@@ -28,16 +28,6 @@ def _split_and_load_docs(docs):
 def create_chroma_from_documents(chunks, collection_name):
     persist_dir = f"chroma_dbs/{collection_name}"
     os.makedirs(persist_dir, exist_ok=True)
-    db = Chroma.from_documents(
-        chunks,
-        embedding=get_embedding_model(),
-        persist_directory=persist_dir,
-        collection_name=collection_name
-    )
-    db.persist()
-
-def load_vector_db(collection_name):
-    persist_dir = f"chroma_dbs/{collection_name}"
     settings = Settings(chroma_db_impl="duckdb+parquet", persist_directory=persist_dir)
 
     db = Chroma.from_documents(
@@ -45,7 +35,21 @@ def load_vector_db(collection_name):
     embedding=get_embedding_model(),
     collection_name=collection_name,
     persist_directory=persist_dir,
-    client_settings=settings  # ✅ critical fix
+    client_settings=settings  # ✅ prevents use of sqlite
+    )
+
+    db.persist()
+
+def load_vector_db(collection_name):
+    persist_dir = f"chroma_dbs/{collection_name}"
+
+    settings = Settings(chroma_db_impl="duckdb+parquet", persist_directory=persist_dir)
+
+    db = Chroma(
+    persist_directory=persist_dir,
+    collection_name=collection_name,
+    embedding_function=get_embedding_model(),
+    client_settings=settings
     )
     st.session_state.vector_db = db
 
