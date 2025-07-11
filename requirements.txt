@@ -8,6 +8,7 @@ chromadb
 chromadb>=0.4.22
 duckdb
 langchain-openai==0.1.7
+faiss-cpu
 
 # Document loaders
 pypdf
