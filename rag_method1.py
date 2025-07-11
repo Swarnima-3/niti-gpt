@@ -37,13 +37,20 @@ def create_faiss_from_documents(chunks, collection_name):
 # --- FAISS: Load Existing DB ---
 def load_vector_db(collection_name):
     persist_dir = f"faiss_dbs/{collection_name}"
+    index_path = os.path.join(persist_dir, "index.faiss")
     embedding = get_embedding_model()
-    db = FAISS.load_local(
-        persist_dir,
-        embeddings=embedding,
-        allow_dangerous_deserialization=True  # ✅ Add this
-    )
-    st.session_state.vector_db = db
+
+    if os.path.exists(index_path):
+        db = FAISS.load_local(
+            persist_dir,
+            embeddings=embedding,
+            allow_dangerous_deserialization=True  # ✅ allow loading .pkl
+        )
+        st.session_state.vector_db = db
+    else:
+        st.warning(f"⚠️ Vector DB for '{collection_name}' not found. Upload documents first.")
+        st.session_state.vector_db = None
+
 
 # --- Extract Metadata ---
 def extract_policy_metadata(text):
