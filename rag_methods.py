@@ -11,6 +11,8 @@ import csv
 import re
 from dotenv import load_dotenv
 load_dotenv()
+from chromadb.config import Settings
+
 
 def get_embedding_model():
     return AzureOpenAIEmbeddings(
@@ -36,10 +38,14 @@ def create_chroma_from_documents(chunks, collection_name):
 
 def load_vector_db(collection_name):
     persist_dir = f"chroma_dbs/{collection_name}"
-    db = Chroma(
-        persist_directory=persist_dir,
-        collection_name=collection_name,
-        embedding_function=get_embedding_model()
+    settings = Settings(chroma_db_impl="duckdb+parquet", persist_directory=persist_dir)
+
+    db = Chroma.from_documents(
+    chunks,
+    embedding=get_embedding_model(),
+    collection_name=collection_name,
+    persist_directory=persist_dir,
+    client_settings=settings  # ✅ critical fix
     )
     st.session_state.vector_db = db
 
