@@ -1,0 +1,19 @@
+streamlit
+python-dotenv
+langchain>=0.1.17
+langchain-community
+openai
+chromadb
+
+# Document loaders
+pypdf
+docx2txt
+unstructured
+beautifulsoup4
+
+# Tokenization
+tiktoken
+
+# Optional utilities
+tqdm
+watchdog
