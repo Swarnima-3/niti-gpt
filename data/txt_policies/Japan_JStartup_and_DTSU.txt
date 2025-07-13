@@ -1,0 +1,59 @@
+An Evaluation of J-Startup and the Deep-Tech Startups Support Program (DTSU)
+1. Introduction
+Japan has implemented a set of high-impact programs to foster deep-tech innovation and strengthen its global startup competitiveness. Among the most prominent are the J-Startup initiative and the Deep-Tech Startups Support Program (DTSU). These efforts aim to position Japan as a leading hub for science-driven entrepreneurship in areas such as artificial intelligence (AI), biotechnology, materials science, robotics, and clean energy.
+
+2. Program Overview
+2.1 J-Startup
+Launched by the Ministry of Economy, Trade and Industry (METI) in 2018, J-Startup is a flagship initiative to identify and support Japan’s most promising startups. Selected companies receive:
+
+Priority access to government procurement opportunities
+
+Tailored mentorship and advisory services
+
+Inclusion in international exhibitions and investor roadshows
+
+Support in regulatory navigation and product localization
+
+The program is highly selective, with only 140 companies selected between 2018 and 2023.
+
+2.2 Deep-Tech Startups Support Program (DTSU)
+DTSU focuses on bridging the “valley of death” in deep-tech commercialization by providing:
+
+Research-to-market subsidies and grants
+
+Infrastructure for international scale-up
+
+Access to academic-industry-government collaboration platforms
+
+The DTSU program is backed by Japan Science and Technology Agency (JST) and NEDO (New Energy and Industrial Technology Development Organization), with a specific emphasis on translational R&D in critical sectors.
+
+3. Key Strengths
+3.1 Strategic Focus on Deep Tech
+Japan’s programs are purpose-built for startups with long gestation periods and high capital intensity. According to METI’s 2023 Innovation Strategy Report, over 40% of government startup R&D funding in 2022 went to deep tech fields.
+
+3.2 Integration with Corporate and Public Sector
+J-Startup offers a unique mechanism where selected startups are introduced directly to large Japanese conglomerates for joint R&D, procurement, or investment. This ecosystem-level integration accelerates technology adoption and reduces market entry barriers.
+
+3.3 Immigration and Talent Incentives
+Japan’s startup visa program enables qualified foreign entrepreneurs to start businesses with relaxed residency conditions. As of 2022, over 400 foreign-led startups were operating in Japan, a significant increase from fewer than 50 in 2016.
+
+3.4 Global Expansion Infrastructure
+Through JETRO and METI partnerships, selected startups gain access to:
+
+Global startup expos (e.g., CES, Slush, Web Summit)
+
+Bilateral trade missions
+
+Soft-landing support in Asia, North America, and Europe
+
+4. Pain Points and Gaps
+4.1 Investment Conservatism in Private Sector
+Despite policy efforts, Japan’s venture capital ecosystem remains cautious. According to PitchBook (2023), deep-tech startups in Japan raised only $1.8 billion in 2022, compared to $7.9 billion in South Korea and $14.2 billion in Germany. Seed and Series A financing for hardware-intensive startups remains limited.
+
+4.2 Fragmentation Beyond Flagship Initiatives
+While J-Startup provides a well-funded and centralized approach, many regional programs lack coordination, funding continuity, or thematic focus. This leads to uneven support quality across prefectures.
+
+4.3 Ambiguity in Deep Tech Definitions
+Stakeholder consultations conducted by NEDO in 2023 indicated a lack of consensus on what constitutes "deep tech," resulting in misalignment in eligibility criteria across agencies.
+
+5. Japan’s J-Startup and DTSU programs illustrate the impact of focused, high-touch government support in building a globally competitive deep-tech ecosystem. While the approach shows measurable success in flagship cases, addressing the fragmentation and risk-aversion in the broader ecosystem remains essential. Countries seeking to replicate Japan’s model should prioritize coordination, targeted deep-tech policy definitions, and sustained venture ecosystem stimulation.
