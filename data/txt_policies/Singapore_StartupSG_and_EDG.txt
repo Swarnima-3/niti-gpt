@@ -1,0 +1,50 @@
+1. Introduction
+Singapore has emerged as a leading innovation and entrepreneurship hub in Asia, driven by deliberate and structured policy mechanisms to support deep-tech startups. Central to this strategy are two flagship programs: Startup SG, which provides early-stage support and market access, and the Enterprise Development Grant (EDG), which facilitates innovation, productivity, and market expansion through co-funding mechanisms.
+
+These programs align with Singapore’s Research, Innovation and Enterprise 2025 (RIE2025) strategy, which allocates S$25 billion over five years toward advancing science, technology, and commercialization.
+
+2. Program Overview
+2.1 Startup SG
+Launched by Enterprise Singapore (ESG) in 2017, Startup SG is a platform comprising multiple tracks tailored to different startup needs:
+
+Startup SG Founder: Provides mentorship and S$50,000 in capital grants for first-time founders.
+
+Startup SG Tech: Offers early-stage Proof-of-Concept (POC) and Proof-of-Value (POV) grants of up to S$500,000 for deep-tech solutions.
+
+Startup SG Equity: Government co-investment with accredited VCs into deep-tech startups, with up to S$8 million in matched equity.
+
+2.2 Enterprise Development Grant (EDG)
+The EDG supports businesses developing capabilities in innovation, productivity, and market access. For deep-tech ventures, EDG:
+
+Covers up to 70% of eligible costs for R&D, automation, and product development
+
+Encourages international expansion through market development projects
+
+Prioritizes projects aligned with Industry Transformation Maps (ITMs)
+
+3. Key Strengths
+3.1 Structured Co-Investment Model
+Singapore’s government co-invests in startups alongside private investors. The Startup SG Equity scheme provides tiered matching (e.g., 7:3 or 6:4) based on startup maturity, de-risking private capital and incentivizing participation in high-risk sectors such as biotech, medtech, and advanced manufacturing.
+
+3.2 Grant-Driven Innovation Push
+Startup SG Tech and EDG grants ensure capital access at early TRLs. According to ESG’s 2023 report, over S$200 million was deployed in deep-tech grants between 2020–2022, supporting more than 600 startups.
+
+3.3 Integration with National R&D and IP Ecosystems
+Deep-tech startups are embedded in Singapore’s broader R&D landscape, including A*STAR research institutes, the National Research Foundation (NRF), and IPOS (Intellectual Property Office of Singapore), ensuring alignment between research outcomes and commercialization pathways.
+
+3.4 Talent and Globalization Support
+Through Tech.Pass, EntrePass, and Startup SG Talent, the ecosystem supports international founders, researchers, and engineers. As of 2022, over 35% of deep-tech startups in Singapore were founded or co-founded by foreign entrepreneurs.
+
+Singapore’s role as a regional HQ hub also enables global market access via ASEAN, India, and East Asia.
+
+4. Challenges and Policy Gaps
+4.1 High Burn Rates and Limited Follow-On Capital
+Despite strong early-stage support, several deep-tech startups face challenges raising Series B and beyond. Singapore's VC landscape remains cautious in sectors with long commercialization timelines. According to DealStreetAsia (2023), fewer than 18% of Singapore deep-tech startups that raised seed funding in 2019–2020 progressed to Series A or beyond.
+
+4.2 Fragmentation in IP Commercialization Channels
+While institutional IP generation is high, the transition from R&D to venture creation remains uneven. A 2021 A*STAR review noted that only 6.4% of licensed technologies led to commercial ventures, indicating a need for stronger tech transfer models.
+
+4.3 Limited Domestic Demand for Deep Tech
+Singapore’s small domestic market means many startups must expand regionally early. This poses additional hurdles in terms of localization, distribution, and regulatory navigation, particularly in medtech and clean tech.
+
+5.Singapore’s Startup SG and EDG programs offer a robust and well-structured policy architecture to enable deep-tech startups. The ecosystem benefits from high institutional coherence, public-private co-investment, and strategic use of R&D assets. While access to follow-on capital and IP commercialization efficiency remain areas for improvement, Singapore continues to be a model of integrated deep-tech policy execution, especially in resource-constrained environments.
