@@ -6,6 +6,7 @@ from langchain_openai import AzureChatOpenAI
 from langchain.schema import HumanMessage, AIMessage
 from dotenv import load_dotenv
 load_dotenv()
+import requests
 
 from rag_method1 import (
     load_doc_to_db,
@@ -34,6 +35,31 @@ llm_stream = AzureChatOpenAI(
     streaming=True,
 )
 
+def download_github_policy_docs(repo_url, local_dir="data/txt_policies"):
+    os.makedirs(local_dir, exist_ok=True)
+
+    api_url = repo_url.replace("github.com", "api.github.com/repos").replace("/tree/", "/contents/")
+    response = requests.get(api_url)
+    files = response.json()
+
+    collection_names = []
+
+    for file in files:
+        if file["name"].endswith((".txt", ".md")):
+            file_url = file["download_url"]
+            local_path = os.path.join(local_dir, file["name"])
+
+            if not os.path.exists(local_path):
+                content = requests.get(file_url).content
+                with open(local_path, "wb") as f:
+                    f.write(content)
+
+            # Strip extension for collection name
+            collection_name = file["name"].rsplit(".", 1)[0]
+            collection_names.append(collection_name)
+
+    return collection_names
+
 # Streamlit UI
 st.set_page_config(page_title="PolicyGPT", layout="wide")
 st.title("NītiGPT")
@@ -51,34 +77,66 @@ if "vector_db" not in st.session_state:
 
 # Sidebar
 with st.sidebar:
-    st.markdown("### 📁 Policy Collection")
-    # Load existing collections
-    available_collections = os.listdir("faiss_dbs") if os.path.exists("faiss_dbs") else []
-    new_policy_mode = st.checkbox("➕ Add New Policy Collection")
+    st.markdown("### 📁 Policy Collection (from GitHub)")
 
-    if new_policy_mode:
-        collection_name = st.text_input("Enter New Policy Name", key="new_policy_name")
-        if collection_name and collection_name not in available_collections:
-            st.success(f"✅ New collection ready: {collection_name}")
+    github_folder = "https://github.com/Swarnima-3/niti-gpt/tree/main/data/txt_policies"
+    available_collections = download_github_policy_docs(github_folder)
+    available_collections = ["All"] + sorted(available_collections)
+
+    selected = st.selectbox("Select Policy Collection", available_collections)
+
+    if selected == "All":
+        from langchain_community.vectorstores import FAISS
+        all_dbs = []
+        for name in available_collections[1:]:
+            path = f"faiss_dbs/{name}"
+            if not os.path.exists(path):
+                from rag_methods import load_txt_files_from_folder
+                load_txt_files_from_folder("data/txt_policies", name)
+
+            db = FAISS.load_local(path, embeddings=get_embedding_model(), allow_dangerous_deserialization=True)
+            all_dbs.append(db)
+
+        if all_dbs:
+            merged = all_dbs[0]
+            for db in all_dbs[1:]:
+                merged.merge_from(db)
+            st.session_state.vector_db = merged
+            st.session_state.collection_name = "All"
+            st.success("✅ Merged all GitHub policies.")
+        else:
+            st.warning("⚠️ No valid collections found.")
     else:
-        collection_name = st.selectbox("Select Existing Policy", available_collections)
+        from rag_methods import load_txt_files_from_folder
+        load_txt_files_from_folder("data/txt_policies", selected)
+        load_vector_db(selected)
+        st.session_state.collection_name = selected
+        st.success(f"✅ Loaded: {selected}")
 
-    # Load vector DB if name is set
-    if collection_name:
-        st.session_state.collection_name = collection_name
-        load_vector_db(collection_name)
-        st.success(f"✅ Using memory: {collection_name}")
+    # Upload and URL input stay the same
+    st.markdown("---")
+    st.markdown("### 📄 Upload Your Own Policy File")
+    uploaded_files = st.file_uploader("Upload PDF, DOCX, or TXT", type=["pdf", "txt", "docx"], accept_multiple_files=True)
+    if uploaded_files:
+        temp_collection = f"user_upload_{st.session_state.session_id}"
+        load_doc_to_db(uploaded_files, temp_collection)
+        st.session_state.collection_name = temp_collection
+        load_vector_db(temp_collection)
+        st.success("✅ Uploaded policy indexed.")
 
-    files = st.file_uploader("📄 Upload Docs", type=["pdf", "txt", "docx"], accept_multiple_files=True)
-    if st.button("📥 Upload & Index") and collection_name:
-        load_doc_to_db(files, collection_name)
-
-    url = st.text_input("🌐 Enter Policy URL", key="url_key")
-    if st.button("🌐 Load URL") and url and collection_name:
-        load_url_to_db(url, collection_name)
+    st.markdown("---")
+    st.markdown("### 🌐 Analyze Policy from URL")
+    url = st.text_input("Enter policy URL", key="url_key")
+    if st.button("🌐 Load URL") and url:
+        temp_collection = f"url_upload_{st.session_state.session_id}"
+        load_url_to_db(url, temp_collection)
+        st.session_state.collection_name = temp_collection
+        load_vector_db(temp_collection)
+        st.success("✅ URL policy indexed.")
 
     st.toggle("Use RAG", value=True, key="use_rag")
     st.button("🧹 Clear Chat", on_click=lambda: st.session_state.messages.clear())
+
 
 # Main chat
 from rag_method1 import load_txt_files_from_folder
