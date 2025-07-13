@@ -35,30 +35,49 @@ llm_stream = AzureChatOpenAI(
     streaming=True,
 )
 
+import requests
+
 def download_github_policy_docs(repo_url, local_dir="data/txt_policies"):
     os.makedirs(local_dir, exist_ok=True)
 
+    # Convert GitHub web URL to API URL
     api_url = repo_url.replace("github.com", "api.github.com/repos").replace("/tree/", "/contents/")
     response = requests.get(api_url)
-    files = response.json()
+
+    if response.status_code != 200:
+        st.warning(f"❌ GitHub API Error: {response.status_code}")
+        return []
+
+    try:
+        files = response.json()
+        if not isinstance(files, list):
+            st.warning("⚠️ GitHub response not a file list.")
+            return []
+    except Exception as e:
+        st.warning(f"❌ Failed to parse GitHub API response: {e}")
+        return []
 
     collection_names = []
 
     for file in files:
-        if file["name"].endswith((".txt", ".md")):
-            file_url = file["download_url"]
+        if isinstance(file, dict) and file.get("name", "").endswith((".txt", ".md")):
+            file_url = file.get("download_url")
             local_path = os.path.join(local_dir, file["name"])
 
             if not os.path.exists(local_path):
-                content = requests.get(file_url).content
-                with open(local_path, "wb") as f:
-                    f.write(content)
+                try:
+                    content = requests.get(file_url).content
+                    with open(local_path, "wb") as f:
+                        f.write(content)
+                except Exception as e:
+                    st.warning(f"⚠️ Failed to download {file['name']}: {e}")
+                    continue
 
-            # Strip extension for collection name
             collection_name = file["name"].rsplit(".", 1)[0]
             collection_names.append(collection_name)
 
     return collection_names
+
 
 # Streamlit UI
 st.set_page_config(page_title="PolicyGPT", layout="wide")
