@@ -1,17 +1,23 @@
-# ✅ FAISS version of rag_methods.py
 import os
 import shutil
 import streamlit as st
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain_openai import AzureOpenAIEmbeddings
-from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader, WebBaseLoader
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.chains import create_history_aware_retriever, create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
 import csv
 import re
 from dotenv import load_dotenv
+
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain_openai import AzureOpenAIEmbeddings
+from langchain_community.document_loaders import (
+    PyPDFLoader,
+    TextLoader,
+    Docx2txtLoader,
+    WebBaseLoader,
+)
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.chains import create_history_aware_retriever, create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
+
 load_dotenv()
 
 # --- Embedding Model ---
@@ -23,7 +29,7 @@ def get_embedding_model():
         model=os.getenv("AZURE_EMBEDDING_DEPLOYMENT", "text-embedding-3-large")
     )
 
-# --- Splitting Documents ---
+# --- Split Documents ---
 def _split_and_load_docs(docs):
     return RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200).split_documents(docs)
 
@@ -44,15 +50,14 @@ def load_vector_db(collection_name):
         db = FAISS.load_local(
             persist_dir,
             embeddings=embedding,
-            allow_dangerous_deserialization=True  # ✅ allow loading .pkl
+            allow_dangerous_deserialization=True
         )
         st.session_state.vector_db = db
     else:
         st.warning(f"⚠️ Vector DB for '{collection_name}' not found. Upload documents first.")
         st.session_state.vector_db = None
 
-
-# --- Extract Metadata ---
+# --- Extract Metadata (Optional) ---
 def extract_policy_metadata(text):
     return {
         "scheme_name": re.search(r"(Scheme Name|Title):\s*(.+)", text, re.I),
@@ -61,7 +66,7 @@ def extract_policy_metadata(text):
         "launch_date": re.search(r"(Launch Date|Start Date):\s*([\d-]+)", text, re.I),
     }
 
-# --- Load from Uploaded Docs ---
+# --- Load Uploaded Files ---
 def load_doc_to_db(files, collection_name):
     docs = []
     for file in files:
@@ -80,7 +85,6 @@ def load_doc_to_db(files, collection_name):
         loaded = loader.load()
         docs += loaded
 
-        # Metadata safety check
         if loaded:
             meta = extract_policy_metadata(loaded[0].page_content)
             st.session_state.last_uploaded_metadata = {k: v.group(2) if v else "Not Found" for k, v in meta.items()}
@@ -90,7 +94,7 @@ def load_doc_to_db(files, collection_name):
     if docs:
         chunks = _split_and_load_docs(docs)
         create_faiss_from_documents(chunks, collection_name)
-        st.toast("\u2705 Documents embedded & stored.")
+        st.toast("✅ Documents embedded & stored.")
 
 # --- Load from URL ---
 def load_url_to_db(url, collection_name):
@@ -117,103 +121,7 @@ def get_conversational_rag_chain(llm):
     )
 
     answer_prompt = ChatPromptTemplate.from_messages([
-        ("system", """
-You are a policy assistant for helping create the Ministry Of Electroncs & IT policies for startups in India. Based on the context, provide:
-(1) Strengths
-(2) Gaps
-(3) Suggestions
-
-Focus on deep tech startup policy metrics like TRL, IP, funding, commercialization, and impact and various other factors to help startups.
-
-This knowledge base provides structured content for powering an AI chatbot that helps governments, policymakers, and innovation bodies assess and design programs for deep tech startups.
-
-Section A: Key Metrics for Deep Tech Startup Programs
-
-1. Program Design & Relevance Metrics
-
-Focus Area Targeting: Does the program prioritize high-impact sectors like AI, Quantum, Semiconductors, BioTech, SpaceTech, etc.?
-
-TRL Alignment: Is the program mapped to specific Technology Readiness Levels (TRL 1–9)?
-
-Eligibility Criteria: Who can apply? Are students, academia-linked founders, or early-stage ventures included?
-
-Problem-Market Fit: Does the program focus on solving pressing national problems using deep tech?
-
-Private Sector Leverage: Does it incentivize private investment, industry co-creation, or CSR capital?
-
-2. Implementation & Access Metrics
-
-Application-to-Approval Ratio: How accessible and competitive is the program?
-
-Disbursal Time: Average time taken between selection and funding release.
-
-Mentor Network Quality: Are domain experts, policymakers, and scientists involved?
-
-IP/Patent Support Provided: Are patent services offered (filing, legal aid, IP searches)?
-
-Attrition Rate: % of startups that exit midway due to operational challenges.
-
-3. Output & Success Metrics
-
-Commercialization Rate: % of startups achieving product-market fit.
-
-Follow-on Funding: Total external capital raised post-program (venture, public, etc.).
-
-IP Assets Created: Number and quality of patents, copyrights, designs.
-
-High-Skill Jobs Created: Especially in research, engineering, data science.
-
-Internationalization Readiness: Number of startups reaching export, JV, or global expansion stage.
-
-4. Long-Term Impact Metrics
-
-National Tech Capability Building: Contribution to sovereign R&D goals.
-
-Public-Private Collaboration: Number of co-funded projects with academia/industry.
-
-Policy Feedback Loop: Has the program generated actionable insights for future policymaking?
-
-Section B: Lifecycle Stages of Deep Tech Startup Programs
-
-1. Ideation Stage
-
-Activities: Innovation challenges, campus scouting, startup bootcamps
-
-Output Indicators: Applications received, teams formed, ideas shortlisted
-
-2. Prototype Stage
-
-Activities: Grant funding (TRL 2–4), maker labs, incubator access
-
-Output Indicators: MVPs, functional prototypes, IP disclosures
-
-3. Validation Stage
-
-Activities: Market testing, sandbox pilots, regulatory support
-
-Output Indicators: Signed PoCs, market feedback, alpha customers
-
-4. Commercialization Stage
-
-Activities: Venture grants, infra access, business acceleration
-
-Output Indicators: Revenues, early sales, partnerships, funding rounds
-
-5. Scale-Up Stage
-
-Activities: Soft loans, export promotion, infra scaling
-
-Output Indicators: Export revenue, high-tech job growth, Series A/B funding
-
-6. Impact/Exit Stage
-
-Activities: IPO readiness, M&A support, strategic exits
-
-Output Indicators: Exit valuation, strategic alliances, national competitiveness impact
-
-
-Context: {context}
-"""),
+        ("system", "You are a policy assistant for helping create the Ministry Of Electroncs & IT policies for startups in India. Based on the context, provide strengths, gaps, and suggestions."),
         MessagesPlaceholder(variable_name="messages"),
         ("user", "{input}")
     ])
@@ -221,7 +129,7 @@ Context: {context}
     stuff_chain = create_stuff_documents_chain(llm, answer_prompt)
     return create_retrieval_chain(retriever_chain, stuff_chain)
 
-# --- Response Streaming ---
+# --- Stream Responses ---
 def stream_llm_response(llm, messages):
     full = ""
     for chunk in llm.stream(messages):
@@ -231,7 +139,7 @@ def stream_llm_response(llm, messages):
 
 def stream_llm_rag_response(llm, messages):
     if not st.session_state.get("vector_db"):
-        yield "\u26A0\uFE0F Vector database not loaded. Please upload a document or select a collection first."
+        yield "⚠️ Vector database not loaded. Please upload a document or select a collection first."
         return
 
     rag_chain = get_conversational_rag_chain(llm)
@@ -247,17 +155,17 @@ def log_feedback(user_input, model_output, rating, comment, file="feedback_log.c
         writer = csv.writer(f)
         writer.writerow([user_input, model_output, rating, comment])
 
-# --- Load .txt files from folder ---
+# --- Load .txt and .md Files ---
 def load_txt_files_from_folder(folder_path, collection_name):
     from langchain_community.document_loaders import TextLoader
     import glob
 
     docs = []
-    for file_path in glob.glob(os.path.join(folder_path, "*.txt")):
+    for file_path in glob.glob(os.path.join(folder_path, "*.txt")) + glob.glob(os.path.join(folder_path, "*.md")):
         loader = TextLoader(file_path)
         docs += loader.load()
 
     if docs:
         chunks = _split_and_load_docs(docs)
         create_faiss_from_documents(chunks, collection_name)
-        print(f"\u2705 Loaded {len(docs)} text files from {folder_path} into collection '{collection_name}'")
+        print(f"✅ Loaded {len(docs)} text/markdown files from {folder_path} into collection '{collection_name}'")
