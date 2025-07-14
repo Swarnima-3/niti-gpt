@@ -1,10 +1,10 @@
 import streamlit as st
 import os
 import uuid
+import requests
 from dotenv import load_dotenv
 from langchain_openai import AzureChatOpenAI
 from langchain.schema import HumanMessage, AIMessage
-import requests
 
 from rag_method1 import (
     get_embedding_model,
@@ -14,6 +14,7 @@ from rag_method1 import (
     stream_llm_rag_response,
     log_feedback,
     load_vector_db,
+    load_txt_files_from_folder,
 )
 
 load_dotenv()
@@ -69,20 +70,14 @@ def download_github_policy_docs(api_url, local_dir="data/txt_policies"):
             collection_names.append(collection_name)
     return collection_names
 
-# Streamlit UI
+# UI Setup
 st.set_page_config(page_title="PolicyGPT", layout="wide")
 st.title("NītiGPT")
 
-if "session_id" not in st.session_state:
-    st.session_state.session_id = str(uuid.uuid4())
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "rag_sources" not in st.session_state:
-    st.session_state.rag_sources = []
-if "collection_name" not in st.session_state:
-    st.session_state.collection_name = None
-if "vector_db" not in st.session_state:
-    st.session_state.vector_db = None
+# Session state init
+for key in ["session_id", "messages", "rag_sources", "collection_name", "vector_db"]:
+    if key not in st.session_state:
+        st.session_state[key] = str(uuid.uuid4()) if key == "session_id" else None if key != "messages" else []
 
 # Sidebar
 with st.sidebar:
@@ -94,18 +89,21 @@ with st.sidebar:
 
     selected = st.selectbox("Select Policy Collection", available_collections)
 
-    from rag_method1 import load_txt_files_from_folder
+    from langchain_community.vectorstores import FAISS
+
     if selected == "All":
-        from langchain_community.vectorstores import FAISS
-        all_dbs = []
         st.session_state.vector_db = None
         st.session_state.collection_name = None
+        all_dbs = []
 
         for name in available_collections[1:]:
             path = f"faiss_dbs/{name}"
+            txt_path = os.path.join("data/txt_policies", f"{name}.txt")
+            if not os.path.exists(txt_path):
+                st.warning(f"⚠️ Skipping '{name}' — source file missing.")
+                continue
             if not os.path.exists(path):
                 load_txt_files_from_folder("data/txt_policies", name)
-
             db = FAISS.load_local(path, embeddings=get_embedding_model(), allow_dangerous_deserialization=True)
             all_dbs.append(db)
 
@@ -121,11 +119,14 @@ with st.sidebar:
     else:
         st.session_state.vector_db = None
         st.session_state.collection_name = None
-
-        load_txt_files_from_folder("data/txt_policies", selected)
-        load_vector_db(selected)
-        st.session_state.collection_name = selected
-        st.success(f"✅ Loaded: {selected}")
+        txt_path = os.path.join("data/txt_policies", f"{selected}.txt")
+        if not os.path.exists(txt_path):
+            st.warning(f"⚠️ File '{selected}.txt' not found locally.")
+        else:
+            load_txt_files_from_folder("data/txt_policies", selected)
+            load_vector_db(selected)
+            st.session_state.collection_name = selected
+            st.success(f"✅ Loaded: {selected}")
 
     st.markdown("---")
     st.markdown("### 📄 Upload Your Own Policy File")
@@ -133,11 +134,10 @@ with st.sidebar:
     if uploaded_files:
         st.session_state.vector_db = None
         st.session_state.collection_name = None
-
         temp_collection = f"user_upload_{st.session_state.session_id}"
         load_doc_to_db(uploaded_files, temp_collection)
-        st.session_state.collection_name = temp_collection
         load_vector_db(temp_collection)
+        st.session_state.collection_name = temp_collection
         st.success("✅ Uploaded policy indexed.")
 
     st.markdown("---")
@@ -146,17 +146,16 @@ with st.sidebar:
     if st.button("🌐 Load URL") and url:
         st.session_state.vector_db = None
         st.session_state.collection_name = None
-
         temp_collection = f"url_upload_{st.session_state.session_id}"
         load_url_to_db(url, temp_collection)
-        st.session_state.collection_name = temp_collection
         load_vector_db(temp_collection)
+        st.session_state.collection_name = temp_collection
         st.success("✅ URL policy indexed.")
 
     st.toggle("Use RAG", value=True, key="use_rag")
     st.button("🧹 Clear Chat", on_click=lambda: st.session_state.messages.clear())
 
-# Chat Interface
+# Main Chat UI
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
@@ -165,14 +164,12 @@ if prompt := st.chat_input("Ask about the uploaded policy..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
-
     with st.chat_message("assistant"):
         messages = [HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"]) for m in st.session_state.messages]
         if st.session_state.use_rag:
             st.write_stream(stream_llm_rag_response(llm_stream, messages))
         else:
             st.write_stream(stream_llm_response(llm_stream, messages))
-
         st.divider()
         feedback = st.radio("Was this helpful?", ["👍", "👎"], horizontal=True)
         comment = st.text_input("Suggestions?")
