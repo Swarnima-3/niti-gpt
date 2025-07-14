@@ -77,7 +77,7 @@ st.title("NītiGPT")
 # Session state init
 for key in ["session_id", "messages", "rag_sources", "collection_name", "vector_db"]:
     if key not in st.session_state:
-        st.session_state[key] = str(uuid.uuid4()) if key == "session_id" else None if key != "messages" else []
+        st.session_state[key] = str(uuid.uuid4()) if key == "session_id" else [] if key == "messages" else None
 
 # Sidebar
 with st.sidebar:
@@ -91,73 +91,65 @@ with st.sidebar:
 
     from langchain_community.vectorstores import FAISS
 
-    if selected == "All":
-        # 🧹 Reset context
+    if selected != st.session_state.collection_name:
+        # 🧹 Force full reset
         st.session_state.messages = []
         st.session_state.vector_db = None
         st.session_state.collection_name = None
-        all_dbs = []
 
-        for name in available_collections[1:]:
-            path = f"faiss_dbs/{name}"
-            txt_path = os.path.join("data/txt_policies", f"{name}.txt")
+        if selected == "All":
+            all_dbs = []
+            for name in available_collections[1:]:
+                path = f"faiss_dbs/{name}"
+                txt_path = os.path.join("data/txt_policies", f"{name}.txt")
+                if not os.path.exists(txt_path):
+                    st.warning(f"⚠️ Skipping '{name}' — source file missing.")
+                    continue
+                if not os.path.exists(path):
+                    load_txt_files_from_folder("data/txt_policies", name)
+                db = FAISS.load_local(path, embeddings=get_embedding_model(), allow_dangerous_deserialization=True)
+                all_dbs.append(db)
+
+            if all_dbs:
+                merged = all_dbs[0]
+                for db in all_dbs[1:]:
+                    merged.merge_from(db)
+                st.session_state.vector_db = merged
+                st.session_state.collection_name = "All"
+                st.success("✅ Merged all GitHub policies.")
+            else:
+                st.warning("⚠️ No valid collections found.")
+
+        else:
+            txt_path = os.path.join("data/txt_policies", f"{selected}.txt")
             if not os.path.exists(txt_path):
-                st.warning(f"⚠️ Skipping '{name}' — source file missing.")
-                continue
-            if not os.path.exists(path):
-                load_txt_files_from_folder("data/txt_policies", name)
-            db = FAISS.load_local(path, embeddings=get_embedding_model(), allow_dangerous_deserialization=True)
-            all_dbs.append(db)
+                st.warning(f"⚠️ File '{selected}.txt' not found locally.")
+            else:
+                load_txt_files_from_folder("data/txt_policies", selected)
+                load_vector_db(selected)
+                st.session_state.collection_name = selected
+                st.success(f"✅ Loaded: {selected}")
 
-        if all_dbs:
-            merged = all_dbs[0]
-            for db in all_dbs[1:]:
-                merged.merge_from(db)
-            st.session_state.vector_db = merged
-            st.session_state.collection_name = "All"
-            st.success("✅ Merged all GitHub policies.")
-        else:
-            st.warning("⚠️ No valid collections found.")
-
-    else:
-        # 🧹 Reset context
-        st.session_state.messages = []
-        st.session_state.vector_db = None
-        st.session_state.collection_name = None
-
-        txt_path = os.path.join("data/txt_policies", f"{selected}.txt")
-        if not os.path.exists(txt_path):
-            st.warning(f"⚠️ File '{selected}.txt' not found locally.")
-        else:
-            load_txt_files_from_folder("data/txt_policies", selected)
-            load_vector_db(selected)
-            st.session_state.collection_name = selected
-            st.success(f"✅ Loaded: {selected}")
-
-    # Upload Section
+    # Upload section
     st.markdown("---")
     st.markdown("### 📄 Upload Your Own Policy File")
     uploaded_files = st.file_uploader("Upload PDF, DOCX, or TXT", type=["pdf", "txt", "docx"], accept_multiple_files=True)
     if uploaded_files:
-        # 🧹 Reset context
         st.session_state.messages = []
         st.session_state.vector_db = None
-        st.session_state.collection_name = None
         temp_collection = f"user_upload_{st.session_state.session_id}"
         load_doc_to_db(uploaded_files, temp_collection)
         load_vector_db(temp_collection)
         st.session_state.collection_name = temp_collection
         st.success("✅ Uploaded policy indexed.")
 
-    # URL Section
+    # URL section
     st.markdown("---")
     st.markdown("### 🌐 Analyze Policy from URL")
     url = st.text_input("Enter policy URL", key="url_key")
     if st.button("🌐 Load URL") and url:
-        # 🧹 Reset context
         st.session_state.messages = []
         st.session_state.vector_db = None
-        st.session_state.collection_name = None
         temp_collection = f"url_upload_{st.session_state.session_id}"
         load_url_to_db(url, temp_collection)
         load_vector_db(temp_collection)
@@ -167,7 +159,7 @@ with st.sidebar:
     st.toggle("Use RAG", value=True, key="use_rag")
     st.button("🧹 Clear Chat", on_click=lambda: st.session_state.messages.clear())
 
-# Main UI – Show selected context
+# Main UI
 if st.session_state.collection_name:
     st.info(f"📄 Currently using: **{st.session_state.collection_name}**")
 
@@ -184,10 +176,19 @@ if prompt := st.chat_input("Ask about the uploaded policy..."):
 
     with st.chat_message("assistant"):
         messages = [HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"]) for m in st.session_state.messages]
+
         if st.session_state.use_rag:
             st.write_stream(stream_llm_rag_response(llm_stream, messages))
+
+            # 🔍 Debug: Show top 2 retrieved chunks
+            if st.session_state.vector_db:
+                docs = st.session_state.vector_db.similarity_search(prompt, k=2)
+                with st.expander("🔍 RAG source preview"):
+                    for i, d in enumerate(docs):
+                        st.markdown(f"**Chunk {i+1}:**\n```\n{d.page_content[:700]}\n```")
         else:
             st.write_stream(stream_llm_response(llm_stream, messages))
+
         st.divider()
         feedback = st.radio("Was this helpful?", ["👍", "👎"], horizontal=True)
         comment = st.text_input("Suggestions?")
