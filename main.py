@@ -37,12 +37,9 @@ llm_stream = AzureChatOpenAI(
 
 import requests
 
-def download_github_policy_docs(repo_url, local_dir="data/txt_policies"):
+def download_github_policy_docs(api_url, local_dir="data/txt_policies"):
     os.makedirs(local_dir, exist_ok=True)
-
-    # Convert GitHub web URL to API URL
-    api_url = repo_url.replace("github.com", "api.github.com/repos").replace("/tree/", "/contents/")
-    st.write(f"📡 Calling GitHub API: {api_url}")  # Debug line
+    st.write(f"📡 Calling GitHub API: {api_url}")
 
     response = requests.get(api_url)
 
@@ -53,12 +50,12 @@ def download_github_policy_docs(repo_url, local_dir="data/txt_policies"):
     try:
         files = response.json()
         if not isinstance(files, list):
-            st.warning("⚠️ GitHub response is not a list of files.")
+            st.warning("⚠️ GitHub response is not a file list.")
             return []
     except Exception as e:
         st.warning(f"❌ Failed to parse GitHub API response: {e}")
         return []
-        
+
     collection_names = []
 
     for file in files:
@@ -100,7 +97,7 @@ if "vector_db" not in st.session_state:
 with st.sidebar:
     st.markdown("### 📁 Policy Collection (from GitHub)")
 
-    github_folder = "https://github.com/Swarnima-3/niti-gpt/tree/main/data/txt_policies"
+    github_folder = "https://api.github.com/repos/Swarnima-3/niti-gpt/contents/data/txt_policies?ref=main"
     available_collections = download_github_policy_docs(github_folder)
     available_collections = ["All"] + sorted(available_collections)
 
