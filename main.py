@@ -42,21 +42,23 @@ def download_github_policy_docs(repo_url, local_dir="data/txt_policies"):
 
     # Convert GitHub web URL to API URL
     api_url = repo_url.replace("github.com", "api.github.com/repos").replace("/tree/", "/contents/")
-    response = requests.get(api_url + "?ref=main")
+    st.write(f"📡 Calling GitHub API: {api_url}")  # Debug line
+
+    response = requests.get(api_url)
 
     if response.status_code != 200:
-        st.warning(f"❌ GitHub API Error: {response.status_code}")
+        st.error(f"❌ GitHub API Error: {response.status_code} — {response.text}")
         return []
 
     try:
         files = response.json()
         if not isinstance(files, list):
-            st.warning("⚠️ GitHub response not a file list.")
+            st.warning("⚠️ GitHub response is not a list of files.")
             return []
     except Exception as e:
         st.warning(f"❌ Failed to parse GitHub API response: {e}")
         return []
-
+        
     collection_names = []
 
     for file in files:
