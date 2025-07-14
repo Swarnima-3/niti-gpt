@@ -161,11 +161,6 @@ with st.sidebar:
 from rag_method1 import load_txt_files_from_folder
 
 # Example usage
-collection_name = "DeepTech_Startup_Policies"
-folder_path = "data/txt_policies"  # Your local folder path
-
-load_txt_files_from_folder(folder_path, collection_name)
-load_vector_db(collection_name)
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
