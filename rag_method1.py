@@ -121,9 +121,17 @@ def get_conversational_rag_chain(llm):
     )
 
     answer_prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a policy assistant for helping create the Ministry Of Electroncs & IT policies for startups in India. Based on the context, provide strengths, gaps, and suggestions."),
-        MessagesPlaceholder(variable_name="messages"),
-        ("user", "{input}")
+    ("system", """You are a policy assistant for helping create the Ministry Of Electronics & IT policies for startups in India.
+
+    Based on the following context, provide:
+    (1) Strengths
+    (2) Gaps
+    (3) Suggestions
+
+    Context: {context}
+    """),
+    MessagesPlaceholder(variable_name="messages"),
+    ("user", "{input}")
     ])
 
     stuff_chain = create_stuff_documents_chain(llm, answer_prompt)
