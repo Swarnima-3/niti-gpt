@@ -4,13 +4,10 @@ import uuid
 from dotenv import load_dotenv
 from langchain_openai import AzureChatOpenAI
 from langchain.schema import HumanMessage, AIMessage
-from dotenv import load_dotenv
-load_dotenv()
 import requests
-from rag_method1 import get_embedding_model
-
 
 from rag_method1 import (
+    get_embedding_model,
     load_doc_to_db,
     load_url_to_db,
     stream_llm_response,
@@ -37,12 +34,9 @@ llm_stream = AzureChatOpenAI(
     streaming=True,
 )
 
-import requests
-
 def download_github_policy_docs(api_url, local_dir="data/txt_policies"):
     os.makedirs(local_dir, exist_ok=True)
     st.write(f"📡 Calling GitHub API: {api_url}")
-
     response = requests.get(api_url)
 
     if response.status_code != 200:
@@ -59,12 +53,10 @@ def download_github_policy_docs(api_url, local_dir="data/txt_policies"):
         return []
 
     collection_names = []
-
     for file in files:
         if isinstance(file, dict) and file.get("name", "").endswith((".txt", ".md")):
             file_url = file.get("download_url")
             local_path = os.path.join(local_dir, file["name"])
-
             if not os.path.exists(local_path):
                 try:
                     content = requests.get(file_url).content
@@ -73,12 +65,9 @@ def download_github_policy_docs(api_url, local_dir="data/txt_policies"):
                 except Exception as e:
                     st.warning(f"⚠️ Failed to download {file['name']}: {e}")
                     continue
-
             collection_name = file["name"].rsplit(".", 1)[0]
             collection_names.append(collection_name)
-
     return collection_names
-
 
 # Streamlit UI
 st.set_page_config(page_title="PolicyGPT", layout="wide")
@@ -93,7 +82,7 @@ if "rag_sources" not in st.session_state:
 if "collection_name" not in st.session_state:
     st.session_state.collection_name = None
 if "vector_db" not in st.session_state:
-    st.session_state.vector_db = None    
+    st.session_state.vector_db = None
 
 # Sidebar
 with st.sidebar:
@@ -105,13 +94,16 @@ with st.sidebar:
 
     selected = st.selectbox("Select Policy Collection", available_collections)
 
+    from rag_method1 import load_txt_files_from_folder
     if selected == "All":
         from langchain_community.vectorstores import FAISS
         all_dbs = []
+        st.session_state.vector_db = None
+        st.session_state.collection_name = None
+
         for name in available_collections[1:]:
             path = f"faiss_dbs/{name}"
             if not os.path.exists(path):
-                from rag_method1 import load_txt_files_from_folder
                 load_txt_files_from_folder("data/txt_policies", name)
 
             db = FAISS.load_local(path, embeddings=get_embedding_model(), allow_dangerous_deserialization=True)
@@ -127,17 +119,21 @@ with st.sidebar:
         else:
             st.warning("⚠️ No valid collections found.")
     else:
-        from rag_method1 import load_txt_files_from_folder
+        st.session_state.vector_db = None
+        st.session_state.collection_name = None
+
         load_txt_files_from_folder("data/txt_policies", selected)
         load_vector_db(selected)
         st.session_state.collection_name = selected
         st.success(f"✅ Loaded: {selected}")
 
-    # Upload and URL input stay the same
     st.markdown("---")
     st.markdown("### 📄 Upload Your Own Policy File")
     uploaded_files = st.file_uploader("Upload PDF, DOCX, or TXT", type=["pdf", "txt", "docx"], accept_multiple_files=True)
     if uploaded_files:
+        st.session_state.vector_db = None
+        st.session_state.collection_name = None
+
         temp_collection = f"user_upload_{st.session_state.session_id}"
         load_doc_to_db(uploaded_files, temp_collection)
         st.session_state.collection_name = temp_collection
@@ -148,6 +144,9 @@ with st.sidebar:
     st.markdown("### 🌐 Analyze Policy from URL")
     url = st.text_input("Enter policy URL", key="url_key")
     if st.button("🌐 Load URL") and url:
+        st.session_state.vector_db = None
+        st.session_state.collection_name = None
+
         temp_collection = f"url_upload_{st.session_state.session_id}"
         load_url_to_db(url, temp_collection)
         st.session_state.collection_name = temp_collection
@@ -157,12 +156,7 @@ with st.sidebar:
     st.toggle("Use RAG", value=True, key="use_rag")
     st.button("🧹 Clear Chat", on_click=lambda: st.session_state.messages.clear())
 
-
-# Main chat
-from rag_method1 import load_txt_files_from_folder
-
-# Example usage
-
+# Chat Interface
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
@@ -179,12 +173,9 @@ if prompt := st.chat_input("Ask about the uploaded policy..."):
         else:
             st.write_stream(stream_llm_response(llm_stream, messages))
 
-        # Feedback
         st.divider()
         feedback = st.radio("Was this helpful?", ["👍", "👎"], horizontal=True)
         comment = st.text_input("Suggestions?")
         if st.button("📩 Submit Feedback"):
             log_feedback(prompt, st.session_state.messages[-1]["content"], feedback, comment)
             st.success("Thanks for your feedback!")
-
-#comment
