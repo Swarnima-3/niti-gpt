@@ -42,7 +42,7 @@ def download_github_policy_docs(repo_url, local_dir="data/txt_policies"):
 
     # Convert GitHub web URL to API URL
     api_url = repo_url.replace("github.com", "api.github.com/repos").replace("/tree/", "/contents/")
-    response = requests.get(api_url)
+    response = requests.get(api_url + "?ref=main")
 
     if response.status_code != 200:
         st.warning(f"❌ GitHub API Error: {response.status_code}")
