@@ -7,6 +7,8 @@ from langchain.schema import HumanMessage, AIMessage
 from dotenv import load_dotenv
 load_dotenv()
 import requests
+from rag_method1 import get_embedding_model
+
 
 from rag_method1 import (
     load_doc_to_db,
