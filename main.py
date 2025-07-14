@@ -109,7 +109,7 @@ with st.sidebar:
         for name in available_collections[1:]:
             path = f"faiss_dbs/{name}"
             if not os.path.exists(path):
-                from rag_methods import load_txt_files_from_folder
+                from rag_method1 import load_txt_files_from_folder
                 load_txt_files_from_folder("data/txt_policies", name)
 
             db = FAISS.load_local(path, embeddings=get_embedding_model(), allow_dangerous_deserialization=True)
@@ -125,7 +125,7 @@ with st.sidebar:
         else:
             st.warning("⚠️ No valid collections found.")
     else:
-        from rag_methods import load_txt_files_from_folder
+        from rag_method1 import load_txt_files_from_folder
         load_txt_files_from_folder("data/txt_policies", selected)
         load_vector_db(selected)
         st.session_state.collection_name = selected
