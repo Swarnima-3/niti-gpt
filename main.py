@@ -92,6 +92,8 @@ with st.sidebar:
     from langchain_community.vectorstores import FAISS
 
     if selected == "All":
+        # 🧹 Reset context
+        st.session_state.messages = []
         st.session_state.vector_db = None
         st.session_state.collection_name = None
         all_dbs = []
@@ -116,9 +118,13 @@ with st.sidebar:
             st.success("✅ Merged all GitHub policies.")
         else:
             st.warning("⚠️ No valid collections found.")
+
     else:
+        # 🧹 Reset context
+        st.session_state.messages = []
         st.session_state.vector_db = None
         st.session_state.collection_name = None
+
         txt_path = os.path.join("data/txt_policies", f"{selected}.txt")
         if not os.path.exists(txt_path):
             st.warning(f"⚠️ File '{selected}.txt' not found locally.")
@@ -128,10 +134,13 @@ with st.sidebar:
             st.session_state.collection_name = selected
             st.success(f"✅ Loaded: {selected}")
 
+    # Upload Section
     st.markdown("---")
     st.markdown("### 📄 Upload Your Own Policy File")
     uploaded_files = st.file_uploader("Upload PDF, DOCX, or TXT", type=["pdf", "txt", "docx"], accept_multiple_files=True)
     if uploaded_files:
+        # 🧹 Reset context
+        st.session_state.messages = []
         st.session_state.vector_db = None
         st.session_state.collection_name = None
         temp_collection = f"user_upload_{st.session_state.session_id}"
@@ -140,10 +149,13 @@ with st.sidebar:
         st.session_state.collection_name = temp_collection
         st.success("✅ Uploaded policy indexed.")
 
+    # URL Section
     st.markdown("---")
     st.markdown("### 🌐 Analyze Policy from URL")
     url = st.text_input("Enter policy URL", key="url_key")
     if st.button("🌐 Load URL") and url:
+        # 🧹 Reset context
+        st.session_state.messages = []
         st.session_state.vector_db = None
         st.session_state.collection_name = None
         temp_collection = f"url_upload_{st.session_state.session_id}"
@@ -155,15 +167,21 @@ with st.sidebar:
     st.toggle("Use RAG", value=True, key="use_rag")
     st.button("🧹 Clear Chat", on_click=lambda: st.session_state.messages.clear())
 
-# Main Chat UI
+# Main UI – Show selected context
+if st.session_state.collection_name:
+    st.info(f"📄 Currently using: **{st.session_state.collection_name}**")
+
+# Chat messages
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
+# Chat input
 if prompt := st.chat_input("Ask about the uploaded policy..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
+
     with st.chat_message("assistant"):
         messages = [HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"]) for m in st.session_state.messages]
         if st.session_state.use_rag:
