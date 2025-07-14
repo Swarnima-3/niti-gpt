@@ -144,16 +144,15 @@ def log_feedback(user_input, model_output, rating, comment, file="feedback_log.c
         writer.writerow([user_input, model_output, rating, comment])
 
 def load_txt_files_from_folder(folder_path, collection_name):
-    import glob
-    docs = []
-    file_paths = glob.glob(os.path.join(folder_path, "*.txt")) + glob.glob(os.path.join(folder_path, "*.md"))
-    if not file_paths:
-        st.warning(f"⚠️ No .txt or .md files found in {folder_path}")
+    file_path = os.path.join(folder_path, f"{collection_name}.txt")
+    if not os.path.exists(file_path):
+        st.warning(f"⚠️ File not found: {file_path}")
         return
-    for file_path in file_paths:
-        loader = TextLoader(file_path)
-        docs += loader.load()
+
+    loader = TextLoader(file_path)
+    docs = loader.load()
+
     if docs:
         chunks = _split_and_load_docs(docs)
         create_faiss_from_documents(chunks, collection_name)
-        print(f"✅ Loaded {len(docs)} documents into collection '{collection_name}'")
+        print(f"✅ Loaded '{file_path}' into collection '{collection_name}'")
